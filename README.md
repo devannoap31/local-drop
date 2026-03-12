@@ -23,19 +23,24 @@ Aplikasi ini dibuat sebagai alternatif yang jauh lebih ringan, cepat, dan privat
 
 1. Pastikan Node.js sudah terinstal di komputer Anda.
 2. Clone repositori ini:
+   ```bash
    git clone https://github.com/USERNAME_GITHUB_ANDA/local-drop.git
+   ```
 
 3. Masuk ke direktori proyek:
+   ```bash
    cd local-drop
-
+   ```
 4. Instal semua dependensi yang dibutuhkan:
+   ```bash
    npm install
-
-5. Buka file server.js, cari variabel SECRET_PIN, dan ubah password default-nya sesuai keinginan Anda.
+   ```
+5. Buka file `server.js`, cari variabel `SECRET_PIN`, dan ubah password default-nya sesuai keinginan Anda.
 
 6. Jalankan server:
+   ```bash
    node server.js
-
+   ```
 7. Buka browser di perangkat Anda:
    * Di Laptop/Server: Akses http://localhost:3000
    * Di HP (Satu jaringan Wi-Fi/Hotspot): Akses URL IP yang muncul di terminal.
