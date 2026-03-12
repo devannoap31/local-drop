@@ -24,7 +24,7 @@ Aplikasi ini dibuat sebagai alternatif yang jauh lebih ringan, cepat, dan privat
 1. Pastikan Node.js sudah terinstal di komputer Anda.
 2. Clone repositori ini:
    ```bash
-   git clone https://github.com/USERNAME_GITHUB_ANDA/local-drop.git
+   git clone https://github.com/devannoap31/local-drop.git
    ```
 
 3. Masuk ke direktori proyek:
