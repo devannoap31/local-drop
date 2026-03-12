@@ -1,0 +1,74 @@
+/* 1. PALET TEMA TERANG (DEFAULT) */
+:root {
+    --bg-color: #f4f4f9;
+    --text-color: #333333;
+    --card-bg: #ffffff;
+    --border-color: #cccccc;
+    --input-bg: #ffffff;
+    --input-text: #333333;
+}
+
+/* 2. PALET TEMA GELAP */
+body.dark-mode {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --card-bg: #1e1e1e;
+    --border-color: #444444;
+    --input-bg: #2d2d2d;
+    --input-text: #e0e0e0;
+}
+
+/* 3. ELEMEN UTAMA DENGAN VARIABEL */
+body { 
+    font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; 
+    background-color: var(--bg-color); 
+    color: var(--text-color); 
+    transition: background-color 0.3s ease, color 0.3s ease; 
+}
+.card { 
+    background-color: var(--card-bg); 
+    padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; 
+    transition: background-color 0.3s ease;
+}
+textarea, input[type="file"], input[type="text"], input[type="password"] { 
+    width: 100%; margin-bottom: 10px; padding: 10px; box-sizing: border-box; border-radius: 4px; 
+    background-color: var(--input-bg); 
+    color: var(--input-text); 
+    border: 1px solid var(--border-color); 
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 4. TOMBOL-TOMBOL (Tetap sama) */
+.btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+button { color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+.btn-primary { background: #007bff; }
+.btn-primary:hover { background: #0056b3; }
+.btn-success { background: #28a745; }
+.btn-success:hover { background: #218838; }
+.btn-secondary { background: #6c757d; }
+.btn-secondary:hover { background: #5a6268; }
+.btn-danger { background: #dc3545; }
+.btn-danger:hover { background: #c82333; }
+
+/* 5. ELEMEN LAINNYA */
+#latestFile { margin-top: 15px; padding: 10px; background-color: var(--input-bg); border-radius: 5px; display: none; word-break: break-all; }
+#latestFile a { color: #007bff; text-decoration: none; font-weight: bold; display: block; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;}
+#latestFile a:hover { text-decoration: underline; color: #0056b3; }
+
+#progressContainer { width: 100%; background-color: var(--border-color); border-radius: 5px; margin-top: 15px; display: none; overflow: hidden; }
+#progressBar { width: 0%; height: 20px; background-color: #28a745; transition: width 0.1s; }
+#progressText { margin-top: 5px; font-size: 14px; color: var(--text-color); text-align: center; display: none; font-weight: bold; }
+
+/* 6. LAYAR LOGIN */
+#loginOverlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+}
+#loginBox {
+    background-color: var(--card-bg); 
+    color: var(--text-color); 
+    padding: 30px; border-radius: 8px; text-align: center; width: 80%; max-width: 300px;
+    transition: background-color 0.3s ease;
+}
+#loginBox input { font-size: 18px; text-align: center; letter-spacing: 1px; font-weight: bold; }

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Drop</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="loginOverlay">
+        <div id="loginBox">
+            <h2>🔒 Local Drop</h2>
+            <p>Masukkan PASSWORD untuk masuk</p>
+            <input type="password" id="pinInput" placeholder="Masukkan Password">
+            <button class="btn-primary" onclick="verifyPin()" style="width: 100%; margin-top: 10px;">Masuk</button>
+            <p id="loginError" style="color: red; display: none; font-size: 14px;">PIN Salah!</p>
+        </div>
+    </div>
+
+    <div id="appContent" style="display: none;">
+        <h2>⚡ Local Drop 
+            <button onclick="logout()" class="btn-danger" style="float: right; font-size: 12px; padding: 5px 10px; margin-left: 10px;">Keluar</button>
+            <button id="themeToggle" onclick="toggleTheme()" style="float: right; background: transparent; border: none; font-size: 20px; cursor: pointer;">🌙</button>
+        </h2>
+
+        <div class="card">
+            <h3>Kirim Teks / Link</h3>
+            <textarea id="textInput" rows="4" placeholder="Ketik atau paste teks di sini..."></textarea>
+            <div class="btn-group">
+                <button class="btn-primary" onclick="updateText()">Kirim Teks</button>
+                <button class="btn-secondary" onclick="copyText()">Copy Teks</button>
+                <button class="btn-success" onclick="fetchText()">Muat Ulang</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Buat File .txt dari Teks</h3>
+            <input type="text" id="fileNameInput" placeholder="Nama file (opsional)">
+            <textarea id="textToFileInput" rows="4" placeholder="Ketik isi file di sini..."></textarea>
+            <button class="btn-primary" onclick="createTextFile()" id="createTxtBtn">Buat & Bagikan .txt</button>
+        </div>
+
+        <div class="card">
+            <h3>Kirim File / Gambar</h3>
+            <input type="file" id="fileInput" multiple> 
+            <button class="btn-primary" onclick="uploadFile()" id="uploadBtn">Upload File</button>
+            
+            <div id="progressContainer"><div id="progressBar"></div></div>
+            <div id="progressText">0% (0 MB / 0 MB)</div>
+            
+            <div id="latestFile"></div> 
+            <button class="btn-danger" id="clearBtn" style="display: none; margin-top: 10px;" onclick="clearFiles()">Bersihkan Link</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
