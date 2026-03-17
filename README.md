@@ -12,13 +12,14 @@ This application was built as a faster, more lightweight, and private alternativ
 * **🕒 Smart File Naming:** Automatically renames uploaded files using a neat `YYYYMMDD_HHMMSS` format to prevent overwriting and keep your storage organized.
 * **🔒 PIN / Password Protected:** Secured with an authentication gateway to prevent unauthorized access or file drops from strangers on the same public Wi-Fi network.
 * **🌙 Dark Mode:** Eye-friendly user interface with automatic theme state saving using `localStorage`.
+* **⚡ Reactive UI:** Built with Alpine.js for a fast, lightweight, and modern reactive user interface without the overhead of heavy frameworks.
 * **📡 Auto IP Detection:** Automatically detects and displays your local IP addresses in the terminal for easy mobile access.
 
 ## 🛠️ Tech Stack
-* **Frontend:** HTML5, CSS3, JavaScript (Vanilla)
-* **Backend:** Node.js, Express.js
-* **Real-time Engine:** Socket.IO
-* **File Handling:** Multer, Node.js File System (fs)
+* **Frontend:** `HTML5`, `CSS3`, `Alpine.js`
+* **Backend:** `Node.js`, `Express.js`
+* **Real-time Engine:** `Socket.IO`
+* **File Handling:** `Multer`, `Node.js File System (fs)`
 
 ## 📥 Installation and Usage
 
@@ -28,10 +29,12 @@ This application was built as a faster, more lightweight, and private alternativ
    ```bash
    git clone https://github.com/devannoap31/local-drop.git
    ```
+
 3. Navigate to the project directory:
    ```bash
    cd local-drop
    ```
+
 4. Install all required dependencies:
    ```bash
    npm install
@@ -43,7 +46,7 @@ This application was built as a faster, more lightweight, and private alternativ
    ```bash
    node server.js
    ```
-   
+
 7. Open a web browser on your devices:
    * **On the Host Laptop:** Access http://localhost:3000
    * **On your Mobile Device:** Access the IP address displayed in your terminal (e.g., http://192.168.x.x:3000)

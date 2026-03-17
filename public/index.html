@@ -5,52 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Local Drop</title>
     <link rel="stylesheet" href="style.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body>
+<body x-data="localDropApp()">
 
-    <div id="loginOverlay">
+    <div id="loginOverlay" x-show="!isLoggedIn" x-cloak>
         <div id="loginBox">
             <h2>🔒 Local Drop</h2>
-            <p>Masukkan PASSWORD untuk masuk</p>
-            <input type="password" id="pinInput" placeholder="Masukkan Password">
-            <button class="btn-primary" onclick="verifyPin()" style="width: 100%; margin-top: 10px;">Masuk</button>
-            <p id="loginError" style="color: red; display: none; font-size: 14px;">PIN Salah!</p>
+            <p>Masukkan Password untuk masuk</p>
+            <input type="password" x-model="pin" placeholder="Masukkan Password" @keyup.enter="verifyPin()">
+            <button class="btn-primary login-btn-block" @click="verifyPin()">Masuk</button>
+            <p x-show="loginError" class="error-text">Password Salah!</p>
         </div>
     </div>
 
-    <div id="appContent" style="display: none;">
+    <div id="appContent" x-show="isLoggedIn" x-cloak>
         <h2>⚡ Local Drop 
-            <button onclick="logout()" class="btn-danger" style="float: right; font-size: 12px; padding: 5px 10px; margin-left: 10px;">Keluar</button>
-            <button id="themeToggle" onclick="toggleTheme()" style="float: right; background: transparent; border: none; font-size: 20px; cursor: pointer;">🌙</button>
+            <button @click="logout()" class="btn-danger header-btn-logout">Keluar</button>
+            <button @click="toggleTheme()" class="header-btn-theme" x-text="theme === 'dark' ? '☀️' : '🌙'"></button>
         </h2>
 
         <div class="card">
             <h3>Kirim Teks / Link</h3>
-            <textarea id="textInput" rows="4" placeholder="Ketik atau paste teks di sini..."></textarea>
+            <textarea rows="4" placeholder="Ketik atau paste teks di sini..." x-model="sharedText"></textarea>
             <div class="btn-group">
-                <button class="btn-primary" onclick="updateText()">Kirim Teks</button>
-                <button class="btn-secondary" onclick="copyText()">Copy Teks</button>
-                <button class="btn-success" onclick="fetchText()">Muat Ulang</button>
+                <button class="btn-primary" @click="updateText()" x-text="btnKirimText"></button>
+                <button class="btn-secondary" @click="copyText()" x-text="btnCopyText"></button>
+                <button class="btn-success" @click="fetchText()" x-text="btnMuatText"></button>
             </div>
         </div>
 
         <div class="card">
             <h3>Buat File .txt dari Teks</h3>
-            <input type="text" id="fileNameInput" placeholder="Nama file (opsional)">
-            <textarea id="textToFileInput" rows="4" placeholder="Ketik isi file di sini..."></textarea>
-            <button class="btn-primary" onclick="createTextFile()" id="createTxtBtn">Buat & Bagikan .txt</button>
+            <input type="text" placeholder="Nama file (opsional)" x-model="txtFilename">
+            <textarea rows="4" placeholder="Ketik isi file di sini..." x-model="txtContent"></textarea>
+            <button class="btn-primary" @click="createTextFile()" x-text="btnBuatTxt" :disabled="isCreatingTxt"></button>
         </div>
 
         <div class="card">
             <h3>Kirim File / Gambar</h3>
-            <input type="file" id="fileInput" multiple> 
-            <button class="btn-primary" onclick="uploadFile()" id="uploadBtn">Upload File</button>
+            <input type="file" x-ref="fileInput" multiple> 
+            <button class="btn-primary" @click="uploadFile()" x-text="btnUploadText" :disabled="isUploading"></button>
             
-            <div id="progressContainer"><div id="progressBar"></div></div>
-            <div id="progressText">0% (0 MB / 0 MB)</div>
+            <div id="progressContainer" x-show="isUploading">
+                <div id="progressBar" :style="`width: ${progressPercent}%`"></div>
+            </div>
+            <div id="progressText" x-show="isUploading" x-text="progressText"></div>
             
-            <div id="latestFile"></div> 
-            <button class="btn-danger" id="clearBtn" style="display: none; margin-top: 10px;" onclick="clearFiles()">Bersihkan Link</button>
+            <div id="latestFile" x-show="sharedFiles.length > 0">
+                🎉 <b x-text="`${sharedFiles.length} File Tersedia!`"></b><br><br>
+                <template x-for="file in sharedFiles" :key="file.url">
+                    <a :href="file.url" :download="file.name" x-text="`📥 Download: ${file.name}`"></a>
+                </template>
+            </div> 
+            <button class="btn-danger mt-10" x-show="sharedFiles.length > 0" @click="clearFiles()">Bersihkan Link</button>
         </div>
     </div>
 

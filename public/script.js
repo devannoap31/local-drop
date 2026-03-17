@@ -1,248 +1,212 @@
-// --- LOGIKA DARK MODE TERCANGGIH & TERINGAN ---
-const themeToggleBtn = document.getElementById('themeToggle');
+document.addEventListener('alpine:init', () => {
+    Alpine.data('localDropApp', () => ({
+        // --- 1. STATE (Variabel Penyimpan Data) ---
+        isLoggedIn: false,
+        loginError: false,
+        pin: sessionStorage.getItem('localDropPin') || '',
+        theme: localStorage.getItem('localDropTheme') || 'light',
+        socket: null,
+        
+        sharedText: '',
+        txtFilename: '',
+        txtContent: '',
+        sharedFiles: [],
+        
+        isUploading: false,
+        progressPercent: 0,
+        progressText: '0%',
+        isCreatingTxt: false,
+        
+        // Label Tombol Dinamis
+        btnKirimText: 'Kirim Teks',
+        btnCopyText: 'Copy Teks',
+        btnMuatText: 'Muat Ulang',
+        btnBuatTxt: 'Buat & Bagikan .txt',
+        btnUploadText: 'Upload File',
 
-// 1. Cek memori browser saat web pertama kali dibuka
-if (localStorage.getItem('localDropTheme') === 'dark') {
-    document.body.classList.add('dark-mode');
-    if(themeToggleBtn) themeToggleBtn.textContent = '☀️';
-}
+        // --- 2. FUNGSI INISIALISASI ---
+        init() {
+            // Terapkan tema saat web dimuat
+            if (this.theme === 'dark') document.body.classList.add('dark-mode');
+            // Coba login otomatis jika ada PIN di memori
+            if (this.pin) this.verifyPin();
+        },
 
-// 2. Fungsi yang dipanggil saat tombol ditekan
-function toggleTheme() {
-    const isDark = document.body.classList.toggle('dark-mode');
-    
-    if (isDark) {
-        localStorage.setItem('localDropTheme', 'dark');
-        document.getElementById('themeToggle').textContent = '☀️';
-    } else {
-        localStorage.setItem('localDropTheme', 'light');
-        document.getElementById('themeToggle').textContent = '🌙';
-    }
-}
-// ----------------------------------------------
+        // --- 3. FUNGSI-FUNGSI UTAMA ---
+        toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            this.theme = isDark ? 'dark' : 'light';
+            localStorage.setItem('localDropTheme', this.theme);
+        },
 
-let socket;
-let currentPin = sessionStorage.getItem('localDropPin') || '';
+        async verifyPin() {
+            if (!this.pin) return;
+            try {
+                const res = await fetch('/api/verify-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: this.pin })
+                });
 
-// Cek apakah sudah pernah login di sesi ini
-if (currentPin) {
-    verifyPin(currentPin);
-}
+                if (res.ok) {
+                    sessionStorage.setItem('localDropPin', this.pin);
+                    this.isLoggedIn = true;
+                    this.loginError = false;
+                    this.initSocket();
+                } else {
+                    this.loginError = true;
+                    sessionStorage.removeItem('localDropPin');
+                }
+            } catch (err) {
+                alert("Gagal terhubung ke server.");
+            }
+        },
 
-// FUNGSI LOGIN / VERIFIKASI PIN
-async function verifyPin(pinParam = null) {
-    const pin = pinParam || document.getElementById('pinInput').value;
-    if (!pin) return;
-
-    try {
-        const res = await fetch('/api/verify-pin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pin })
-        });
-
-        if (res.ok) {
-            currentPin = pin;
-            sessionStorage.setItem('localDropPin', pin); // Simpan PIN sementara di browser
-            
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('appContent').style.display = 'block';
-            
-            initSocket(); // Hubungkan sistem real-time setelah login berhasil
-        } else {
-            document.getElementById('loginError').style.display = 'block';
+        logout() {
             sessionStorage.removeItem('localDropPin');
+            location.reload();
+        },
+
+        initSocket() {
+            this.socket = io({ auth: { pin: this.pin } });
+
+            this.socket.on('connect_error', (err) => {
+                alert(err.message);
+                this.logout();
+            });
+
+            // Saat Socket menerima data, Alpine otomatis mengupdate HTML!
+            this.socket.on('textUpdated', (newText) => {
+                this.sharedText = newText;
+            });
+
+            this.socket.on('filesShared', (filesArray) => {
+                this.sharedFiles = filesArray || [];
+            });
+
+            this.socket.on('filesCleared', () => {
+                this.sharedFiles = [];
+            });
+        },
+
+        updateText() {
+            if (this.socket) this.socket.emit('updateText', this.sharedText);
+            this.btnKirimText = "Terkirim! ✓";
+            setTimeout(() => this.btnKirimText = "Kirim Teks", 1500);
+        },
+
+        async fetchText() {
+            try {
+                const res = await fetch('/api/text', { headers: { 'x-pin': this.pin } });
+                if (!res.ok) throw new Error("Akses ditolak");
+                const data = await res.json();
+                this.sharedText = data.text;
+                
+                this.btnMuatText = "Dimuat! ✓";
+                setTimeout(() => this.btnMuatText = "Muat Ulang", 1500);
+            } catch (error) {
+                alert(error.message);
+                this.logout();
+            }
+        },
+
+        copyText() {
+            navigator.clipboard.writeText(this.sharedText).then(() => {
+                this.btnCopyText = "Berhasil Dicopy! ✓";
+                setTimeout(() => this.btnCopyText = "Copy Teks", 1500);
+            });
+        },
+
+        async createTextFile() {
+            if (!this.txtContent) return alert('Isi file tidak boleh kosong!');
+            
+            let filename = this.txtFilename.trim();
+            if (!filename) filename = 'Catatan-' + Math.floor(Date.now() / 1000) + '.txt';
+            else if (!filename.toLowerCase().endsWith('.txt')) filename += '.txt';
+
+            this.isCreatingTxt = true;
+            this.btnBuatTxt = "Membuat...";
+
+            try {
+                const res = await fetch('/api/create-txt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-pin': this.pin },
+                    body: JSON.stringify({ text: this.txtContent, filename })
+                });
+                
+                if (!res.ok) throw new Error("Akses ditolak");
+
+                this.txtContent = '';
+                this.txtFilename = '';
+                this.btnBuatTxt = "Berhasil Dibuat! ✓";
+            } catch (error) {
+                alert(error.message);
+                this.btnBuatTxt = "Gagal Dibuat";
+            } finally {
+                setTimeout(() => { 
+                    this.btnBuatTxt = "Buat & Bagikan .txt"; 
+                    this.isCreatingTxt = false; 
+                }, 1500);
+            }
+        },
+
+        formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        },
+
+        uploadFile() {
+            // Mengambil file menggunakan x-ref dari Alpine
+            const files = this.$refs.fileInput.files;
+            if (files.length === 0) return alert('Pilih file dulu!');
+
+            let totalSize = 0;
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]); 
+                totalSize += files[i].size;
+            }
+
+            this.isUploading = true;
+            this.btnUploadText = "Mengirim...";
+            this.progressPercent = 0;
+            this.progressText = `0% (0 MB / ${this.formatBytes(totalSize)})`;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/upload', true);
+            xhr.setRequestHeader('x-pin', this.pin);
+
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    this.progressPercent = Math.round((event.loaded / event.total) * 100);
+                    this.progressText = `${this.progressPercent}% (${this.formatBytes(event.loaded)} / ${this.formatBytes(event.total)})`;
+                }
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    this.$refs.fileInput.value = ''; 
+                    this.progressText = "Selesai!";
+                    setTimeout(() => {
+                        this.isUploading = false;
+                        this.btnUploadText = "Upload File";
+                    }, 2000);
+                } else {
+                    alert("Akses ditolak atau terjadi kesalahan.");
+                    this.isUploading = false;
+                    this.btnUploadText = "Upload File";
+                }
+            };
+
+            xhr.send(formData);
+        },
+
+        clearFiles() {
+            if (this.socket) this.socket.emit('clearFiles');
         }
-    } catch (err) {
-        alert("Gagal terhubung ke server.");
-    }
-}
-
-function logout() {
-    sessionStorage.removeItem('localDropPin');
-    location.reload(); // Muat ulang halaman untuk mengunci kembali
-}
-
-// INISIALISASI SOCKET DENGAN PIN
-function initSocket() {
-    socket = io({
-        auth: { pin: currentPin } // Kirim PIN untuk validasi real-time
-    });
-
-    socket.on('connect_error', (err) => {
-        alert(err.message);
-        logout();
-    });
-
-    socket.on('textUpdated', (newText) => {
-        document.getElementById('textInput').value = newText;
-    });
-
-    socket.on('filesShared', (filesArray) => {
-        const fileDiv = document.getElementById('latestFile');
-        const clearBtn = document.getElementById('clearBtn');
-        
-        if (!filesArray || filesArray.length === 0) return;
-
-        fileDiv.style.display = 'block';
-        clearBtn.style.display = 'inline-block'; 
-        
-        let linksHtml = '';
-        filesArray.forEach(fileData => {
-            linksHtml += `<a href="${fileData.url}" download="${fileData.name}">📥 Download: ${fileData.name}</a>`;
-        });
-
-        fileDiv.innerHTML = `🎉 <b>${filesArray.length} File Tersedia!</b><br><br>${linksHtml}`;
-    });
-
-    socket.on('filesCleared', () => {
-        document.getElementById('latestFile').style.display = 'none';
-        document.getElementById('latestFile').innerHTML = '';
-        document.getElementById('clearBtn').style.display = 'none';
-    });
-}
-
-// FUNGSI UTAMA APLIKASI
-function clearFiles() {
-    if (socket) socket.emit('clearFiles');
-}
-
-function updateText() {
-    const text = document.getElementById('textInput').value;
-    if (socket) socket.emit('updateText', text);
-    
-    const btn = document.querySelector('button[onclick="updateText()"]');
-    const originalText = btn.textContent;
-    btn.textContent = "Terkirim! ✓";
-    setTimeout(() => btn.textContent = originalText, 1500);
-}
-
-async function fetchText() {
-    try {
-        const res = await fetch('/api/text', {
-            headers: { 'x-pin': currentPin } // Sisipkan PIN ke header
-        });
-        if (!res.ok) throw new Error("Akses ditolak");
-        const data = await res.json();
-        document.getElementById('textInput').value = data.text;
-        
-        const btn = document.querySelector('button[onclick="fetchText()"]');
-        const originalText = btn.textContent;
-        btn.textContent = "Dimuat! ✓";
-        setTimeout(() => btn.textContent = originalText, 1500);
-    } catch (error) {
-        alert(error.message);
-        logout();
-    }
-}
-
-function copyText() {
-    const text = document.getElementById('textInput');
-    text.select();
-    text.setSelectionRange(0, 99999); 
-    navigator.clipboard.writeText(text.value).then(() => {
-        const btn = document.querySelector('button[onclick="copyText()"]');
-        const originalText = btn.textContent;
-        btn.textContent = "Berhasil Dicopy! ✓";
-        setTimeout(() => btn.textContent = originalText, 1500);
-    });
-}
-
-async function createTextFile() {
-    const text = document.getElementById('textToFileInput').value;
-    let filename = document.getElementById('fileNameInput').value.trim();
-    const btn = document.getElementById('createTxtBtn');
-
-    if (!text) return alert('Isi file tidak boleh kosong!');
-    if (!filename) filename = 'Catatan-' + Math.floor(Date.now() / 1000) + '.txt';
-    else if (!filename.toLowerCase().endsWith('.txt')) filename += '.txt';
-
-    btn.textContent = "Membuat...";
-    btn.disabled = true;
-
-    try {
-        const res = await fetch('/api/create-txt', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'x-pin': currentPin 
-            },
-            body: JSON.stringify({ text, filename })
-        });
-        if (!res.ok) throw new Error("Akses ditolak");
-
-        document.getElementById('textToFileInput').value = '';
-        document.getElementById('fileNameInput').value = '';
-        btn.textContent = "Berhasil Dibuat! ✓";
-        setTimeout(() => { btn.textContent = "Buat & Bagikan .txt"; btn.disabled = false; }, 1500);
-    } catch (error) {
-        alert(error.message);
-        btn.textContent = "Buat & Bagikan .txt";
-        btn.disabled = false;
-    }
-}
-
-function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
-
-function uploadFile() {
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput.files.length === 0) return alert('Pilih file dulu!');
-
-    const files = fileInput.files;
-    const uploadBtn = document.getElementById('uploadBtn');
-    const progressContainer = document.getElementById('progressContainer');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-
-    let totalSize = 0;
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-        formData.append('files', files[i]); 
-        totalSize += files[i].size;
-    }
-
-    uploadBtn.textContent = "Mengirim...";
-    uploadBtn.disabled = true;
-    progressContainer.style.display = 'block';
-    progressText.style.display = 'block';
-    progressBar.style.width = '0%';
-    progressText.textContent = `0% (0 MB / ${formatBytes(totalSize)})`;
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/upload', true);
-    xhr.setRequestHeader('x-pin', currentPin); // Sisipkan PIN
-
-    xhr.upload.onprogress = function(event) {
-        if (event.lengthComputable) {
-            const percentComplete = Math.round((event.loaded / event.total) * 100);
-            progressBar.style.width = percentComplete + '%';
-            progressText.textContent = `${percentComplete}% (${formatBytes(event.loaded)} / ${formatBytes(event.total)})`;
-        }
-    };
-
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            fileInput.value = ''; 
-            uploadBtn.textContent = "Upload File";
-            uploadBtn.disabled = false;
-            progressText.textContent = "Selesai!";
-            setTimeout(() => {
-                progressContainer.style.display = 'none';
-                progressText.style.display = 'none';
-            }, 3000);
-        } else {
-            alert("Akses ditolak atau terjadi kesalahan.");
-            uploadBtn.textContent = "Upload File";
-            uploadBtn.disabled = false;
-        }
-    };
-
-    xhr.send(formData);
-}
+    }));
+});

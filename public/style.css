@@ -72,3 +72,15 @@ button { color: white; border: none; padding: 10px 15px; border-radius: 5px; cur
     transition: background-color 0.3s ease;
 }
 #loginBox input { font-size: 18px; text-align: center; letter-spacing: 1px; font-weight: bold; }
+
+/* --- 7. KELAS TAMBAHAN (PENGGANTI INLINE CSS) --- */
+/* Mencegah layar berkedip sebelum Alpine.js dimuat */
+[x-cloak] { display: none !important; }
+
+.login-btn-block { width: 100%; margin-top: 10px; }
+.error-text { color: #dc3545; font-size: 14px; margin-top: 10px; }
+
+.header-btn-logout { float: right; font-size: 12px; padding: 5px 10px; margin-left: 10px; }
+.header-btn-theme { float: right; background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--text-color); }
+
+.mt-10 { margin-top: 10px; }
