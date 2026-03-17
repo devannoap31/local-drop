@@ -1,49 +1,52 @@
 # ⚡ Local Drop
 
-Local Drop adalah aplikasi web ringan berbasis Node.js untuk mentransfer teks, tautan, dan file antar perangkat (Laptop dan HP) secara *real-time* melalui jaringan lokal (WLAN/Hotspot). 
+Local Drop is a lightweight, Node.js-based web application designed for transferring text, links, and files between devices (PC/Laptop and Mobile) in real-time over a local area network (WLAN/Mobile Hotspot).
 
-Aplikasi ini dibuat sebagai alternatif yang jauh lebih ringan, cepat, dan privat dibandingkan menggunakan WhatsApp Web untuk transfer file pribadi. Karena berjalan di jaringan lokal, transfer file berukuran besar (Gigabyte) tidak akan menyedot kuota internet sama sekali.
+This application was built as a faster, more lightweight, and private alternative to WhatsApp Web for personal file transfers. Since it operates entirely on a local network, transferring massive files (up to Gigabytes) will not consume any of your internet data quota.
 
-## ✨ Fitur Utama
-* **🚀 Real-time Text Sync:** Ketik di HP, langsung muncul di layar laptop tanpa perlu di-*refresh* (didukung oleh Socket.IO).
-* **📁 Multiple File Upload:** Kirim banyak gambar, video, atau dokumen sekaligus.
-* **📊 Progress Bar Indikator:** Pantau persentase dan kecepatan *upload* file berukuran besar secara akurat.
-* **📝 Text-to-File Generator:** Ubah catatan panjang menjadi file `.txt` fisik secara instan.
-* **🔒 Password / PIN Protected:** Dilengkapi gerbang keamanan sehingga orang asing di jaringan Wi-Fi yang sama (misal: Wi-Fi kampus) tidak bisa mengintip atau mengirim file sembarangan.
-* **🌙 Dark Mode:** Tampilan antarmuka yang nyaman di mata dengan penyimpanan tema otomatis.
-* **📡 Auto IP Detection:** Menampilkan alamat IP jaringan secara otomatis di terminal.
+## ✨ Key Features
+* **🚀 Real-time Text Sync:** Type on your phone and watch it instantly appear on your laptop screen without the need to refresh the page (powered by Socket.IO).
+* **📁 Multiple File Upload:** Send multiple images, videos, or documents simultaneously.
+* **📊 Progress Bar Indicator:** Accurately monitor the upload percentage and progress of large files.
+* **📝 Text-to-File Generator:** Instantly convert long notes or text into a physical `.txt` file ready to be downloaded.
+* **🕒 Smart File Naming:** Automatically renames uploaded files using a neat `YYYYMMDD_HHMMSS` format to prevent overwriting and keep your storage organized.
+* **🔒 PIN / Password Protected:** Secured with an authentication gateway to prevent unauthorized access or file drops from strangers on the same public Wi-Fi network.
+* **🌙 Dark Mode:** Eye-friendly user interface with automatic theme state saving using `localStorage`.
+* **📡 Auto IP Detection:** Automatically detects and displays your local IP addresses in the terminal for easy mobile access.
 
-## 🛠️ Teknologi yang Digunakan
+## 🛠️ Tech Stack
 * **Frontend:** HTML5, CSS3, JavaScript (Vanilla)
 * **Backend:** Node.js, Express.js
 * **Real-time Engine:** Socket.IO
-* **File Handling:** Multer, File System (fs)
+* **File Handling:** Multer, Node.js File System (fs)
 
-## 📥 Cara Instalasi dan Penggunaan
+## 📥 Installation and Usage
 
-1. Pastikan Node.js sudah terinstal di komputer Anda.
-2. Clone repositori ini:
+1. Ensure you have **Node.js** installed on your machine.
+
+2. Clone this repository:
    ```bash
    git clone https://github.com/devannoap31/local-drop.git
    ```
-
-3. Masuk ke direktori proyek:
+3. Navigate to the project directory:
    ```bash
    cd local-drop
    ```
-4. Instal semua dependensi yang dibutuhkan:
+4. Install all required dependencies:
    ```bash
    npm install
    ```
-5. Buka file `server.js`, cari variabel `SECRET_PIN`, dan ubah password default-nya sesuai keinginan Anda.
 
-6. Jalankan server:
+5. Open `server.js`, locate the `SECRET_PIN` variable, and change the default password to your own secure PIN/Password.
+
+6. Start the server:
    ```bash
    node server.js
    ```
-7. Buka browser di perangkat Anda:
-   * Di Laptop/Server: Akses http://localhost:3000
-   * Di HP (Satu jaringan Wi-Fi/Hotspot): Akses URL IP yang muncul di terminal.
+   
+7. Open a web browser on your devices:
+   * **On the Host Laptop:** Access http://localhost:3000
+   * **On your Mobile Device:** Access the IP address displayed in your terminal (e.g., http://192.168.x.x:3000)
 
-## 👨‍💻 Pembuat
-Dibuat oleh **Devanno Andhika Putra**.
+## 👨‍💻 Author
+Created by **Devanno Andhika Putra**.
