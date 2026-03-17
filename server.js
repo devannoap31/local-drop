@@ -11,27 +11,42 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 // --- KONFIGURASI KEAMANAN ---
-const SECRET_PIN = "devanno318"; // Ganti angka ini dengan PIN rahasia Anda
+// Silakan ubah password/PIN ini sesuai keinginan Anda
+const SECRET_PIN = "1234"; 
 
 app.use(express.json());
 app.use(express.static('public')); 
 app.use('/uploads', express.static('uploads'));
 
-// Middleware: Penjaga Pintu Gerbang API
 const checkPin = (req, res, next) => {
     const pin = req.headers['x-pin'];
-    if (pin === SECRET_PIN) {
-        next(); // PIN benar, silakan masuk
+    if (String(pin) === String(SECRET_PIN)) {
+        next(); 
     } else {
         res.status(401).json({ success: false, message: 'Akses Ditolak: PIN Salah' });
     }
 };
 
-// Endpoint khusus untuk mengecek PIN saat pertama kali login
 app.post('/api/verify-pin', (req, res) => {
-    if (req.body.pin === SECRET_PIN) res.json({ success: true });
+    if (String(req.body.pin) === String(SECRET_PIN)) res.json({ success: true });
     else res.status(401).json({ success: false });
 });
+
+// --- FUNGSI FORMAT WAKTU BARU (YYYYMMDD_HHMMSS) ---
+function getFormattedTime() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    // getMonth() dimulai dari 0 (Januari), jadi harus ditambah 1
+    const MM = String(now.getMonth() + 1).padStart(2, '0'); 
+    const dd = String(now.getDate()).padStart(2, '0');
+    // getHours() sudah otomatis menggunakan format 24 jam
+    const HH = String(now.getHours()).padStart(2, '0'); 
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    
+    return `${yyyy}${MM}${dd}_${HH}${mm}${ss}`;
+}
+// ---------------------------------------------------
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -40,7 +55,8 @@ const storage = multer.diskStorage({
         cb(null, dir);
     },
     filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);
+        // Menggunakan format waktu yang baru untuk upload file
+        cb(null, getFormattedTime() + '-' + file.originalname);
     }
 });
 const upload = multer({ storage });
@@ -48,12 +64,13 @@ const upload = multer({ storage });
 let sharedText = "Belum ada teks.";
 let sharedFiles = [];
 
-// Semua rute API sekarang dipasangi checkPin
 app.get('/api/text', checkPin, (req, res) => res.json({ text: sharedText }));
 
 app.post('/api/create-txt', checkPin, (req, res) => {
     const { text, filename } = req.body;
-    const safeFilename = Date.now() + '-' + filename;
+    
+    // Menggunakan format waktu yang baru untuk pembuatan file .txt
+    const safeFilename = getFormattedTime() + '-' + filename;
     const filepath = path.join(__dirname, 'uploads', safeFilename);
 
     fs.writeFile(filepath, text, (err) => {
@@ -75,10 +92,9 @@ app.post('/api/upload', checkPin, upload.array('files'), (req, res) => {
     res.json({ success: true });
 });
 
-// Penjaga Pintu Gerbang untuk koneksi Socket.IO (Real-time)
 io.use((socket, next) => {
     const pin = socket.handshake.auth.pin;
-    if (pin === SECRET_PIN) {
+    if (String(pin) === String(SECRET_PIN)) {
         next();
     } else {
         next(new Error("Akses ditolak oleh server"));
