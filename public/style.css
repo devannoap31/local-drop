@@ -51,13 +51,13 @@ button { color: white; border: none; padding: 10px 15px; border-radius: 5px; cur
 .btn-danger:hover { background: #c82333; }
 
 /* 5. ELEMEN LAINNYA */
-#latestFile { margin-top: 15px; padding: 10px; background-color: var(--input-bg); border-radius: 5px; display: none; word-break: break-all; }
+#latestFile { margin-top: 15px; padding: 10px; background-color: var(--input-bg); border-radius: 5px; word-break: break-all; }
 #latestFile a { color: #007bff; text-decoration: none; font-weight: bold; display: block; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;}
 #latestFile a:hover { text-decoration: underline; color: #0056b3; }
 
-#progressContainer { width: 100%; background-color: var(--border-color); border-radius: 5px; margin-top: 15px; display: none; overflow: hidden; }
+#progressContainer { width: 100%; background-color: var(--border-color); border-radius: 5px; margin-top: 15px; overflow: hidden; }
 #progressBar { width: 0%; height: 20px; background-color: #28a745; transition: width 0.1s; }
-#progressText { margin-top: 5px; font-size: 14px; color: var(--text-color); text-align: center; display: none; font-weight: bold; }
+#progressText { margin-top: 5px; font-size: 14px; color: var(--text-color); text-align: center; font-weight: bold; }
 
 /* 6. LAYAR LOGIN */
 #loginOverlay {
