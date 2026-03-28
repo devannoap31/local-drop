@@ -15,7 +15,6 @@ const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
-// --------------------------------------------------------------
 
 // --- KONFIGURASI KEAMANAN ---
 const SECRET_PIN = "1234"; 
@@ -47,37 +46,42 @@ function getFormattedTime() {
     const HH = String(now.getHours()).padStart(2, '0'); 
     const mm = String(now.getMinutes()).padStart(2, '0');
     const ss = String(now.getSeconds()).padStart(2, '0');
-    
-    // Sesuai permintaan Anda, pemisah antara tanggal dan jam menggunakan strip (-)
     return `${yyyy}${MM}${dd}-${HH}${mm}${ss}`;
 }
-// ---------------------------------------------
+
+// --- FUNGSI PERAKIT NAMA FILE (ANTI-KEDOBELAN) ---
+function generateSafeFileName(originalName) {
+    const extWithDot = path.extname(originalName);
+    const extClean = extWithDot.substring(1);
+    let baseName = path.basename(originalName, extWithDot);
+
+    // 1. Bersihkan Prefix: Hapus tulisan "docx_" di depan jika sudah ada
+    if (extClean && baseName.startsWith(`${extClean}_`)) {
+        baseName = baseName.substring(extClean.length + 1);
+    }
+
+    // 2. Bersihkan Suffix: Hapus timestamp lama di belakang jika ada
+    // Pola Regex: Cari garis bawah (_), diikuti 8 angka, strip (-), lalu 6 angka tepat sebelum string berakhir ($)
+    const oldTimestampPattern = /_\d{8}-\d{6}$/;
+    baseName = baseName.replace(oldTimestampPattern, '');
+
+    // 3. Rakit ulang dengan waktu yang baru
+    const timeString = getFormattedTime();
+    return extClean 
+        ? `${extClean}_${baseName}_${timeString}${extWithDot}`
+        : `${baseName}_${timeString}`;
+}
+// ------------------------------------------------
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        // Karena folder dijamin sudah dibuat saat server menyala, 
-        // kita langsung suruh Multer menaruhnya di sana.
         cb(null, './uploads');
     },
     filename: (req, file, cb) => {
-        // 1. Ambil ekstensi dengan titik (misal: ".docx")
-        const extWithDot = path.extname(file.originalname);
-        // 2. Ambil ekstensi tanpa titik (misal: "docx")
-        const extClean = extWithDot.substring(1);
-        // 3. Ambil nama file asli tanpa ekstensi (misal: "sponsorship - nunggu revisi")
-        const baseName = path.basename(file.originalname, extWithDot);
-        // 4. Ambil waktu saat ini
-        const timeString = getFormattedTime();
-        // 5. Rakit sesuai format Anda: docx_namafile_20260326-220119.docx
-        // (Jika kebetulan file tidak punya ekstensi, kita tangani agar tidak ada tulisan "_namafile...")
-        const newFileName = extClean 
-            ? `${extClean}_${baseName}_${timeString}${extWithDot}`
-            : `${baseName}_${timeString}`;
-
-        cb(null, newFileName);
+        // Panggil fungsi pintar kita
+        cb(null, generateSafeFileName(file.originalname));
     }
 });
-
 const upload = multer({ storage });
 
 let sharedText = "Belum ada teks.";
@@ -88,14 +92,8 @@ app.get('/api/text', checkPin, (req, res) => res.json({ text: sharedText }));
 app.post('/api/create-txt', checkPin, (req, res) => {
     const { text, filename } = req.body;
     
-    // Terapkan logika penamaan yang sama untuk fitur pembuat file .txt
-    const extWithDot = path.extname(filename) || '.txt';
-    const extClean = extWithDot.substring(1);
-    const baseName = path.basename(filename, extWithDot);
-    const timeString = getFormattedTime();
-
-    // Akan menghasilkan misal: txt_CatatanKampus_20260326-220119.txt
-    const safeFilename = `${extClean}_${baseName}_${timeString}${extWithDot}`;
+    // Panggil fungsi pintar kita juga untuk pembuatan file .txt
+    const safeFilename = generateSafeFileName(filename);
     const filepath = path.join(__dirname, 'uploads', safeFilename);
 
     fs.writeFile(filepath, text, (err) => {
@@ -108,10 +106,9 @@ app.post('/api/create-txt', checkPin, (req, res) => {
 });
 
 app.post('/api/upload', checkPin, upload.array('files'), (req, res) => {
-    // Tampilkan nama file yang sudah dirakit di layar HP/Laptop
     const uploadedFiles = req.files.map(file => ({
         url: `/uploads/${file.filename}`,
-        name: file.filename // Menggunakan file.filename agar yang muncul di layar adalah nama baru, bukan nama lama
+        name: file.filename
     }));
     sharedFiles = sharedFiles.concat(uploadedFiles);
     io.emit('filesShared', sharedFiles); 
