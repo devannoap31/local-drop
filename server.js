@@ -10,6 +10,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+// --- PASTIKAN FOLDER UPLOADS SELALU ADA SAAT SERVER MENYALA ---
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+// --------------------------------------------------------------
+
 // --- KONFIGURASI KEAMANAN ---
 const SECRET_PIN = "1234"; 
 
@@ -48,23 +55,19 @@ function getFormattedTime() {
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const dir = './uploads';
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-        cb(null, dir);
+        // Karena folder dijamin sudah dibuat saat server menyala, 
+        // kita langsung suruh Multer menaruhnya di sana.
+        cb(null, './uploads');
     },
     filename: (req, file, cb) => {
         // 1. Ambil ekstensi dengan titik (misal: ".docx")
         const extWithDot = path.extname(file.originalname);
-        
         // 2. Ambil ekstensi tanpa titik (misal: "docx")
         const extClean = extWithDot.substring(1);
-        
         // 3. Ambil nama file asli tanpa ekstensi (misal: "sponsorship - nunggu revisi")
         const baseName = path.basename(file.originalname, extWithDot);
-        
         // 4. Ambil waktu saat ini
         const timeString = getFormattedTime();
-
         // 5. Rakit sesuai format Anda: docx_namafile_20260326-220119.docx
         // (Jika kebetulan file tidak punya ekstensi, kita tangani agar tidak ada tulisan "_namafile...")
         const newFileName = extClean 
@@ -74,6 +77,7 @@ const storage = multer.diskStorage({
         cb(null, newFileName);
     }
 });
+
 const upload = multer({ storage });
 
 let sharedText = "Belum ada teks.";
