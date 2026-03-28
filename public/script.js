@@ -111,40 +111,32 @@ document.addEventListener('alpine:init', () => {
         },
 
         copyText() {
-            if (!this.sharedText) return; // Jangan lakukan apa-apa jika kosong
+            if (!this.sharedText) return; 
 
-            // Cek apakah browser mendukung fitur modern DAN koneksinya aman (localhost/HTTPS)
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(this.sharedText).then(() => {
-                    this.btnCopyText = "Berhasil Dicopy! ✓";
-                    setTimeout(() => this.btnCopyText = "Copy Teks", 1500);
-                });
-            } else {
-                // TRIK JADUL (Untuk HP dengan HTTP biasa):
-                // 1. Buat elemen textarea bayangan di luar layar
-                const textArea = document.createElement("textarea");
-                textArea.value = this.sharedText;
-                textArea.style.position = "fixed";
-                textArea.style.left = "-999999px";
-                textArea.style.top = "-999999px";
-                document.body.appendChild(textArea);
-                
-                // 2. Sorot isi teksnya
-                textArea.focus();
-                textArea.select();
-                
-                // 3. Paksa jalankan perintah copy bawaan sistem operasi
-                try {
-                    document.execCommand('copy');
-                    this.btnCopyText = "Berhasil Dicopy! ✓";
-                    setTimeout(() => this.btnCopyText = "Copy Teks", 1500);
-                } catch (err) {
-                    alert('Yahh, browser HP ini menolak untuk menyalin teks.');
-                }
-                
-                // 4. Hapus lagi elemen bayangannya agar bersih
-                document.body.removeChild(textArea);
+            // Gunakan Textarea di web (jauh lebih reliable untuk teks besar)
+            // Ini akan membuat textarea sementara, menyorotnya, dan menyalinnya.
+            // Metode ini kebal terhadap aturan keamanan HTTP/HTTPS.
+            const textArea = document.createElement("textarea");
+            textArea.value = this.sharedText;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                // Perintah salin bawaan browser yang sangat robust
+                document.execCommand('copy');
+                this.btnCopyText = "Berhasil Dicopy! ✓";
+                setTimeout(() => this.btnCopyText = "Copy Teks", 1500);
+            } catch (err) {
+                // Jika masih gagal (sangat jarang), kita beri peringatan manual
+                alert('Gagal menyalin otomatis. Silakan salin teks secara manual.');
             }
+            
+            document.body.removeChild(textArea);
         },
 
         async createTextFile() {
