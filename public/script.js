@@ -143,7 +143,8 @@ document.addEventListener('alpine:init', () => {
             if (!this.txtContent) return alert('Isi file tidak boleh kosong!');
             
             let filename = this.txtFilename.trim();
-            if (!filename) filename = 'Catatan-' + Math.floor(Date.now() / 1000) + '.txt';
+            // Cukup beri nama dasar, biarkan backend yang mengurus sisanya!
+            if (!filename) filename = 'Catatan.txt';
             else if (!filename.toLowerCase().endsWith('.txt')) filename += '.txt';
 
             this.isCreatingTxt = true;
